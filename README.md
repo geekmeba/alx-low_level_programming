@@ -1,1 +1,1 @@
-about c basic code
+about varaibles and if conditions
