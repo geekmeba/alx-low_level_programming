@@ -1,86 +1,107 @@
 #include "main.h"
-#include <stdio.h>
 #include <stdlib.h>
 
 /**
- * number - function to calculate number of words
- * @str: string being passed to check for words
+ * getWord - get one word starting at given index of a string
+ * The word is put into a new allocated memory block
+ * @i: starting index of the word
+ * @s: string
  *
- * Return: number of words
+ * Return: address of memory block allocated to the word, NULL on error
  */
-int number(char *str)
+char *getWord(int i, char *s)
 {
-	int a, num = 0;
+	int n, endIndex = i;
+	char *ptr = NULL;
 
-	for (a = 0; str[a] != '\0'; a++)
+	while (*(s + endIndex) != ' ' && *(s + endIndex) != '\0')
 	{
-		if (*str == ' ')
-			str++;
-		else
+		endIndex++;
+	}
+	ptr = (char *) malloc(sizeof(char) * (endIndex - i + 1));
+	if (ptr)
+	{
+		for (n = i; n < endIndex; n++)
 		{
-			for (; str[a] != ' ' && str[a] != '\0'; a++)
-				str++;
-			num++;
+			*(ptr + n - i) = *(s + n);
 		}
 	}
-	return (num);
-}
-/**
- * free_everything - frees the memory
- * @string: pointer values being passed for freeing
- * @i: counter
- */
-void free_everything(char **string, int i)
-{
-	for (; i > 0;)
-		free(string[--i]);
-	free(string);
+	*(ptr + n - i) = '\0';
+	return (ptr);
 }
 
 /**
- * strtow - function that splits string into words
- * Return: null if string is empty or null or function fails
+ * strtow - split string to words. words are separated by spaces
+ * @str: string
+ *
+ * Return: 0 on success
  */
 char **strtow(char *str)
 {
-	int total_words = 0, b = 0, c = 0, length = 0;
-	char **words, *found_word;
+	/* len: index of null byte */
+	int i = 0, found = 0, len = 0, count = 0;
+	int inWord = 0, error = 0;
+	char **ptr = NULL;
 
-	if (str == 0 || *str == 0)
+	if (str == NULL || *str == '\0')
 		return (NULL);
-	total_words = number(str);
-	if (total_words == 0)
-		return (NULL);
-	words = malloc((total_words + 1) * sizeof(char *));
-	if (words == 0)
-		return (NULL);
-	for (; *str != '\0' &&  b < total_words;)
+	/*
+	 * count number of words
+	 * and number of characters
+	 */
+	while (*(str + len))
 	{
-		if (*str == ' ')
-			str++;
+		if (*(str + len) != ' ')
+		{
+			if (!inWord)
+			{
+				count++;
+				inWord = 1;
+			}
+		}
 		else
 		{
-			found_word = str;
-			for (; *str != ' ' && *str != '\0';)
+			if (inWord)
+				inWord = 0;
+		}
+		len++;
+	}
+	if (count == 0)
+		return (NULL);
+	ptr = (char **) malloc(sizeof(char *) * (count + 1));
+	if (ptr)
+	{
+		inWord = 0;
+		for (i = 0; found < count; i++)
+		{
+			if (*(str + i) != ' ')
 			{
-				length++;
-				str++;
+				if (!inWord)
+				{
+					inWord = 1;
+					*(ptr + found) = getWord(i, str);
+					if (!*(ptr + found++))
+						error = 1;
+				}
 			}
-			words[b] = malloc((length + 1) * sizeof(char));
-			if (words[b] == 0)
+			else
 			{
-				free_everything(words, b);
-				return (NULL);
+				if (inWord)
+					inWord = 0;
 			}
-			while (*found_word != ' ' && *found_word != '\0')
+
+		}
+		*(ptr + found) = NULL;
+		/* if there is an error, free all memory */
+		if (error)
+		{
+			for (i = 0; i < count + 1; i++)
 			{
-				words[b][c] = *found_word;
-				found_word++;
-				c++;
+				free(*(ptr + i));
 			}
-			words[b][c] = '\0';
-			b++; c = 0; length = 0; str++;
+			free(ptr);
+			ptr = NULL;
 		}
 	}
-	return (words);
+	return (ptr);
 }
