@@ -39,7 +39,6 @@ void free_everything(char **string, int i)
 
 /**
  * strtow - function that splits string into words
- * @str: string being passed
  * Return: null if string is empty or null or function fails
  */
 char **strtow(char *str)
